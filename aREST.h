@@ -780,8 +780,11 @@ void handle(HardwareSerial& serial){
 
   if (serial.available()) {
 
+    // Overrride send http headers
+    bool headers = force_send_http_headers;
+
     // Handle request
-    handle_proto(serial,false,1,false);
+    handle_proto(serial,headers,1,false);
 
     // Answer
     sendBuffer(serial,25,1);
@@ -1688,6 +1691,16 @@ void set_name(const String& device_name){
   device_name.toCharArray(name, NAME_SIZE);
 }
 
+// Enable force of send http headers
+void enable_force_send_http_headers(){
+  force_send_http_headers = true;
+}
+
+// Set end of comunication character
+void set_end_of_comunication_character(char character){
+  end_of_comunication = character;
+}
+
 // Remove last char from buffer
 void removeLastBufferChar() {
 
@@ -1829,6 +1842,10 @@ void sendBuffer(T& client, uint8_t chunkSize, uint8_t wait_time) {
         Serial.println(intermediate_buffer);
       }
     }
+  }
+
+  if (end_of_comunication != 0) {
+    client.print(end_of_comunication);
   }
 
   if (DEBUG_MODE) {
@@ -1989,6 +2006,12 @@ private:
   uint8_t variables_index;
   Variable* variables[NUMBER_VARIABLES];
   const char * variable_names[NUMBER_VARIABLES];
+
+  // Force send http headers
+  bool force_send_http_headers;
+
+  // End of communication character 
+  char end_of_comunication;
 
   // MQTT client
   #if defined(PubSubClient_h)
